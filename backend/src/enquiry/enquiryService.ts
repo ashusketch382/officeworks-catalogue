@@ -1,25 +1,49 @@
+import type { CountryCode } from 'libphonenumber-js';
 import { z } from 'zod';
 import type { CatalogueService } from '../catalogue/catalogueService.js';
 import type { EmailProvider } from './emailProvider.js';
-import { formatPhoneInternational, isValidPhone, PHONE_ERROR } from './phone.js';
+import {
+  DEFAULT_PHONE_COUNTRY,
+  formatPhoneInternational,
+  hasOnlyNationalNumberChars,
+  isPhoneCountry,
+  isValidPhone,
+  PHONE_COUNTRY_ERROR,
+  PHONE_ERROR,
+  PHONE_NO_PLUS_ERROR,
+} from './phone.js';
 
 /**
  * Enquiry input. Validated on the server regardless of client-side checks.
- * `website` is a honeypot: humans never see it, naive bots fill it in.
+ * Phone is optional and split into `phoneCountry` (ISO 3166 code, e.g. "AU")
+ * and `phone` (the national number). `website` is a honeypot: humans never
+ * see it, naive bots fill it in.
  */
-export const enquirySchema = z.object({
-  productId: z.string().trim().min(1, 'Product is required').max(64),
-  name: z.string().trim().min(1, 'Name is required').max(100),
-  email: z.string().trim().email('Enter a valid email address').max(254),
-  phone: z
-    .string()
-    .trim()
-    .max(30)
-    .refine((v) => v === '' || isValidPhone(v), PHONE_ERROR)
-    .optional(),
-  message: z.string().trim().max(2000).optional().or(z.literal('')),
-  website: z.string().optional(),
-});
+export const enquirySchema = z
+  .object({
+    productId: z.string().trim().min(1, 'Product is required').max(64),
+    name: z.string().trim().min(1, 'Name is required').max(100),
+    email: z.string().trim().email('Enter a valid email address').max(254),
+    phoneCountry: z
+      .string()
+      .trim()
+      .toUpperCase()
+      .default(DEFAULT_PHONE_COUNTRY)
+      .pipe(z.custom<CountryCode>((v) => typeof v === 'string' && isPhoneCountry(v), PHONE_COUNTRY_ERROR)),
+    phone: z.string().trim().max(30).optional(),
+    message: z.string().trim().max(2000).optional().or(z.literal('')),
+    website: z.string().optional(),
+  })
+  .superRefine((input, ctx) => {
+    if (!input.phone) return;
+    if (input.phone.startsWith('+')) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['phone'], message: PHONE_NO_PLUS_ERROR });
+    } else if (!hasOnlyNationalNumberChars(input.phone)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['phone'], message: PHONE_ERROR });
+    } else if (!isValidPhone(input.phone, input.phoneCountry)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['phone'], message: PHONE_ERROR });
+    }
+  });
 
 export type EnquiryInput = z.infer<typeof enquirySchema>;
 
@@ -67,7 +91,7 @@ export class EnquiryService {
         '',
         `Name: ${name}`,
         `Email: ${singleLine(input.email)}`,
-        `Phone: ${input.phone ? formatPhoneInternational(input.phone) : '(not provided)'}`,
+        `Phone: ${input.phone ? formatPhoneInternational(input.phone, input.phoneCountry) : '(not provided)'}`,
         '',
         'Message:',
         input.message || '(none)',

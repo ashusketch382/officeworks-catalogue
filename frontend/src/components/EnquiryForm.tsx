@@ -1,18 +1,20 @@
 import { useState, type FormEvent } from 'react';
 import { ApiError, api as defaultApi, type Api } from '../api/client';
 import type { EnquiryRequest, FieldErrors } from '../api/types';
-import { isValidPhone, PHONE_ERROR } from './phone';
+import type { CountryCode } from 'libphonenumber-js';
+import { COUNTRY_OPTIONS, DEFAULT_PHONE_COUNTRY, examplePhone, phoneError } from './phone';
 
-type Fields = Required<Omit<EnquiryRequest, 'productId'>>;
+type Fields = Required<Omit<EnquiryRequest, 'productId' | 'phoneCountry'>> & { phoneCountry: CountryCode };
 
-const EMPTY: Fields = { name: '', email: '', phone: '', message: '', website: '' };
+const EMPTY: Fields = { name: '', email: '', phoneCountry: DEFAULT_PHONE_COUNTRY, phone: '', message: '', website: '' };
 
 /** Client-side checks for fast feedback. The server validates again. */
 export function validate(fields: Fields): FieldErrors {
   const errors: FieldErrors = {};
   if (!fields.name.trim()) errors.name = ['Name is required'];
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fields.email.trim())) errors.email = ['Enter a valid email address'];
-  if (fields.phone.trim() && !isValidPhone(fields.phone.trim())) errors.phone = [PHONE_ERROR];
+  const phone = phoneError(fields.phone, fields.phoneCountry);
+  if (phone) errors.phone = [phone];
   return errors;
 }
 
@@ -102,21 +104,44 @@ export function EnquiryForm({
         {fieldError('email')}
       </label>
 
-      <label>
-        Phone
-        <input
-          type="tel"
-          inputMode="tel"
-          placeholder="0412 345 678"
-          value={fields.phone}
-          onChange={set('phone')}
-          autoComplete="tel"
-          maxLength={30}
-          aria-invalid={!!errors.phone}
-          aria-describedby="phone-error"
-        />
+      <fieldset className="phone">
+        <legend>Phone</legend>
+        <div className="phone-row">
+          <label>
+            <span className="visually-hidden">Country code</span>
+            <select
+              value={fields.phoneCountry}
+              onChange={(e) => {
+                const phoneCountry = e.target.value as CountryCode;
+                setFields((f) => ({ ...f, phoneCountry }));
+                setErrors(({ phone: _cleared, ...rest }) => rest);
+              }}
+              autoComplete="tel-country-code"
+            >
+              {COUNTRY_OPTIONS.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.name} {c.dialCode}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            <span className="visually-hidden">Phone number</span>
+            <input
+              type="tel"
+              inputMode="tel"
+              placeholder={examplePhone(fields.phoneCountry)}
+              value={fields.phone}
+              onChange={set('phone')}
+              autoComplete="tel-national"
+              maxLength={30}
+              aria-invalid={!!errors.phone}
+              aria-describedby="phone-error"
+            />
+          </label>
+        </div>
         {fieldError('phone')}
-      </label>
+      </fieldset>
 
       <label>
         Message

@@ -25,6 +25,9 @@ export interface EnquiryRequest {
   productId: string;
   name: string;
   email: string;
+  /** ISO 3166 country code for the phone number, e.g. "AU". */
+  phoneCountry?: string;
+  /** National number, without the country calling code. */
   phone?: string;
   message?: string;
   /** Honeypot: always empty for real users. */

@@ -71,6 +71,10 @@ button:disabled { opacity: 0.6; cursor: default; }
 .enquiry { display: grid; gap: 12px; margin-top: var(--space); padding: var(--space); border: 1px solid var(--color-border); border-radius: var(--radius); max-width: 480px; }
 .enquiry h2 { margin: 0; }
 .enquiry label { display: grid; gap: 4px; font-size: 0.9rem; }
+.enquiry .phone { border: 0; padding: 0; margin: 0; display: grid; gap: 4px; min-width: 0; }
+.enquiry .phone legend { font-size: 0.9rem; padding: 0; margin-bottom: 4px; }
+.phone-row { display: grid; grid-template-columns: minmax(140px, 45%) 1fr; gap: 8px; }
+select { font: inherit; padding: 8px 6px; border: 1px solid var(--color-border); border-radius: var(--radius); width: 100%; background: var(--color-bg); }
 .actions { display: flex; gap: 8px; }
 .field-error, .error { color: var(--color-error); font-size: 0.85rem; }
 .thank-you { margin-top: var(--space); padding: var(--space); border-radius: var(--radius); background: var(--color-surface); }

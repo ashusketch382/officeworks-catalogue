@@ -30,6 +30,7 @@ const validEnquiry = {
   productId: '1',
   name: 'Jane Citizen',
   email: 'jane@example.com',
+  phoneCountry: 'AU',
   phone: '0412 345 678',
   message: 'Is this in stock?',
 };
@@ -109,28 +110,61 @@ describe('HTTP API', () => {
       expect(ctx.email.sent).toHaveLength(0);
     });
 
-    it.each(['12345', '0000000000', '1234567', '+1 555 0100', 'abc', '0412'])(
-      'rejects the made-up phone number %j without sending email',
-      async (phone) => {
-        const res = await request(ctx.app).post('/api/enquiries').send({ ...validEnquiry, phone }).expect(400);
+    describe('phone (country code + national number)', () => {
+      it.each([
+        ['AU', '12345'],
+        ['AU', '0000000000'],
+        ['AU', '1234567'],
+        ['AU', '0412'],
+        ['AU', 'abc'],
+        ['US', '555 0100'],
+        ['AU', '98765 43210'], // a real Indian mobile, but not under Australia
+        ['IN', '0412 345 678'], // a real Australian mobile, but not under India
+      ])('rejects %s %j without sending email', async (phoneCountry, phone) => {
+        const res = await request(ctx.app)
+          .post('/api/enquiries')
+          .send({ ...validEnquiry, phoneCountry, phone })
+          .expect(400);
         expect(res.body.details.phone).toEqual([expect.stringMatching(/valid phone number/i)]);
         expect(ctx.email.sent).toHaveLength(0);
-      },
-    );
+      });
 
-    it.each([
-      ['0412 345 678', '+61 412 345 678'],
-      ['(02) 9876 5432', '+61 2 9876 5432'],
-      ['+91 98765 43210', '+91 98765 43210'],
-    ])('accepts the real phone number %j and emails it as %j', async (phone, formatted) => {
-      await request(ctx.app).post('/api/enquiries').send({ ...validEnquiry, phone }).expect(202);
-      expect(ctx.email.sent[0]?.text).toContain(`Phone: ${formatted}`);
-    });
+      it.each([
+        ['AU', '0412 345 678', '+61 412 345 678'],
+        ['AU', '(02) 9876 5432', '+61 2 9876 5432'],
+        ['IN', '98765 43210', '+91 98765 43210'],
+        ['GB', '07400 123456', '+44 7400 123456'],
+        ['us', '(201) 555-0123', '+1 201 555 0123'], // lower-case country is normalised
+      ])('accepts %s %j and emails it as %j', async (phoneCountry, phone, formatted) => {
+        await request(ctx.app).post('/api/enquiries').send({ ...validEnquiry, phoneCountry, phone }).expect(202);
+        expect(ctx.email.sent[0]?.text).toContain(`Phone: ${formatted}`);
+      });
 
-    it('accepts an enquiry with no phone number (phone is optional)', async () => {
-      const { phone: _omit, ...withoutPhone } = validEnquiry;
-      await request(ctx.app).post('/api/enquiries').send({ ...withoutPhone, phone: '' }).expect(202);
-      expect(ctx.email.sent[0]?.text).toContain('Phone: (not provided)');
+      it('defaults to Australia when no country code is sent', async () => {
+        await request(ctx.app).post('/api/enquiries').send({ ...validEnquiry, phone: '0412 345 678' }).expect(202);
+        expect(ctx.email.sent[0]?.text).toContain('Phone: +61 412 345 678');
+      });
+
+      it('rejects a "+" typed into the number, since the country comes from its own field', async () => {
+        const res = await request(ctx.app)
+          .post('/api/enquiries')
+          .send({ ...validEnquiry, phoneCountry: 'AU', phone: '+61 412 345 678' })
+          .expect(400);
+        expect(res.body.details.phone).toEqual([expect.stringMatching(/country code from the list/i)]);
+      });
+
+      it('rejects an unknown country code', async () => {
+        const res = await request(ctx.app)
+          .post('/api/enquiries')
+          .send({ ...validEnquiry, phoneCountry: 'XX' })
+          .expect(400);
+        expect(res.body.details).toHaveProperty('phoneCountry');
+      });
+
+      it('accepts an enquiry with no phone number (phone is optional)', async () => {
+        await request(ctx.app).post('/api/enquiries').send({ ...validEnquiry, phone: '' }).expect(202);
+        expect(ctx.email.sent[0]?.text).toContain('Phone: (not provided)');
+      });
     });
 
     it('404s for an unknown product without sending email', async () => {
