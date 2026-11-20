@@ -12,13 +12,16 @@ services:
     environment:
       PORT: "4000"
       CORS_ORIGIN: http://localhost:8080
+      EMAIL_FROM: no-reply@example.com
       EMAIL_PROVIDER: smtp
       SMTP_HOST: mailpit
       SMTP_PORT: "1025"
     depends_on:
       - mailpit
-    ports:
-      - "4000:4000"
+    # Not published to the host: the browser reaches the API through nginx on
+    # :8080/api (same origin), so there is no extra port to clash with.
+    expose:
+      - "4000"
 
   web:
     build:

@@ -30,7 +30,8 @@
 - **Unsafe cleanup command.** During the smoke test the agent tried to stop the server by killing *all* `node.exe` processes on the machine. The permission guard blocked it. It was redone as a background task stopped by its own ID.
 - **False alarm on "missing" images.** The first browser screenshot showed blank product tiles. Rather than "fixing" CSS or CSP, the agent checked `naturalWidth` on the images: they had loaded, and the screenshot was taken before they painted. No code change. Good example of verifying before changing.
 - **Test noise.** React Router v7 future-flag warnings appeared in test output. They were opted into explicitly so real warnings aren't buried.
-- **Not verified by the agent:** the Docker images and `docker compose up`, because Docker isn't installed on the build machine. The Node-only path (`npm install && npm run dev`) and all tests were run and pass.
+- **Leftover processes and an unneeded port.** Stopping the dev-server background task didn't stop its child processes, so the old API kept port 4000. The first `docker compose up` then failed with "port 4000 is already allocated". Two fixes: the orphaned processes were stopped, and the compose file no longer publishes the API to the host at all. The browser only needs nginx on :8080, which proxies `/api`, so a reviewer can't hit the same clash.
+- **Docker verified end to end:** both images build. Via `docker compose up`, `/api` works through nginx, an enquiry lands in the Mailpit inbox, and SPA deep links (e.g. `/categories/electronics`) return 200.
 
 > **My review notes:** <!-- TODO (Ashutosh): add 1–3 things YOU found or changed while reviewing the code yourself. Be specific and only write what actually happened. -->
 

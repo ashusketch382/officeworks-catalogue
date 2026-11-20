@@ -23,7 +23,7 @@ docker compose up --build
 |---|---|
 | App | http://localhost:8080 |
 | Sales inbox (Mailpit) | http://localhost:8025 |
-| API health | http://localhost:4000/api/health |
+| API health (via nginx) | http://localhost:8080/api/health |
 
 Submit an enquiry in the app, then open the Mailpit inbox to see the email.
 
