@@ -1,0 +1,35 @@
+# One command: `docker compose up --build`
+#   App:          http://localhost:8080
+#   Sales inbox:  http://localhost:8025  (Mailpit, a free local mail catcher)
+services:
+  api:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    env_file:
+      - path: backend/.env
+        required: false
+    environment:
+      PORT: "4000"
+      CORS_ORIGIN: http://localhost:8080
+      EMAIL_PROVIDER: smtp
+      SMTP_HOST: mailpit
+      SMTP_PORT: "1025"
+    depends_on:
+      - mailpit
+    ports:
+      - "4000:4000"
+
+  web:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    depends_on:
+      - api
+    ports:
+      - "8080:80"
+
+  mailpit:
+    image: axllent/mailpit:v1.21
+    ports:
+      - "8025:8025"
