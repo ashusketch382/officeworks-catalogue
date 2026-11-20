@@ -1,0 +1,76 @@
+/* Deliberately plain: the real look and feel is coming from the creative team.
+   All visual decisions live in these tokens so a re-skin is mostly a token swap. */
+:root {
+  --color-bg: #ffffff;
+  --color-surface: #f5f6f8;
+  --color-text: #1b1d21;
+  --color-muted: #5f6672;
+  --color-primary: #1f4fd8;
+  --color-primary-text: #ffffff;
+  --color-error: #b3261e;
+  --color-border: #dfe2e7;
+  --radius: 8px;
+  --space: 16px;
+  --max-width: 1100px;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  color: var(--color-text);
+  background: var(--color-bg);
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; }
+img { max-width: 100%; }
+h1 { font-size: 1.6rem; margin: 0 0 var(--space); }
+h2 { font-size: 1.2rem; margin: calc(var(--space) * 1.5) 0 var(--space); }
+
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+.header { border-bottom: 1px solid var(--color-border); background: var(--color-surface); }
+.header-inner, .categories, .main { max-width: var(--max-width); margin: 0 auto; padding: 0 var(--space); }
+.header-inner { display: flex; gap: var(--space); align-items: center; justify-content: space-between; padding-top: 12px; padding-bottom: 12px; flex-wrap: wrap; }
+.brand { font-weight: 700; font-size: 1.2rem; color: var(--color-text); text-decoration: none; }
+.categories { display: flex; gap: var(--space); padding-bottom: 12px; flex-wrap: wrap; }
+.categories a { color: var(--color-muted); text-decoration: none; }
+.categories a.active { color: var(--color-primary); font-weight: 600; }
+.main { padding-top: calc(var(--space) * 1.5); padding-bottom: calc(var(--space) * 3); }
+
+.search { display: flex; gap: 8px; flex: 1; max-width: 420px; min-width: 220px; }
+.search input { flex: 1; }
+
+input, textarea {
+  font: inherit; padding: 8px 10px; border: 1px solid var(--color-border); border-radius: var(--radius); width: 100%;
+}
+input[aria-invalid='true'] { border-color: var(--color-error); }
+button {
+  font: inherit; padding: 8px 16px; border-radius: var(--radius); border: 1px solid var(--color-primary);
+  background: var(--color-primary); color: var(--color-primary-text); cursor: pointer;
+}
+button.secondary { background: transparent; color: var(--color-primary); }
+button:disabled { opacity: 0.6; cursor: default; }
+
+.grid { list-style: none; padding: 0; margin: 0; display: grid; gap: var(--space); grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+.tile {
+  display: flex; flex-direction: column; gap: 8px; height: 100%; padding: var(--space);
+  border: 1px solid var(--color-border); border-radius: var(--radius); color: inherit; text-decoration: none; background: var(--color-bg);
+}
+.tile:hover, .tile:focus-visible { border-color: var(--color-primary); }
+.tile img { height: 160px; object-fit: contain; }
+.tile-title { flex: 1; font-size: 0.95rem; }
+.tile-meta { display: flex; justify-content: space-between; }
+.price { font-weight: 600; }
+.price.large { font-size: 1.4rem; margin: 0; }
+.rating, .muted { color: var(--color-muted); }
+
+.product { display: grid; gap: calc(var(--space) * 2); grid-template-columns: minmax(200px, 360px) 1fr; }
+.product img { max-height: 400px; object-fit: contain; }
+@media (max-width: 700px) { .product { grid-template-columns: 1fr; } }
+
+.enquiry { display: grid; gap: 12px; margin-top: var(--space); padding: var(--space); border: 1px solid var(--color-border); border-radius: var(--radius); max-width: 480px; }
+.enquiry h2 { margin: 0; }
+.enquiry label { display: grid; gap: 4px; font-size: 0.9rem; }
+.actions { display: flex; gap: 8px; }
+.field-error, .error { color: var(--color-error); font-size: 0.85rem; }
+.thank-you { margin-top: var(--space); padding: var(--space); border-radius: var(--radius); background: var(--color-surface); }
