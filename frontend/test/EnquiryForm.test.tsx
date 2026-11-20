@@ -35,6 +35,30 @@ describe('EnquiryForm', () => {
     expect(submitEnquiry).not.toHaveBeenCalled();
   });
 
+  it.each(['12345', '0000000000', '+1 555 0100'])('rejects the made-up phone number %j', async (phone) => {
+    const { submitEnquiry, user } = setup();
+
+    await user.type(screen.getByLabelText(/name/i), 'Jane');
+    await user.type(screen.getByLabelText(/email/i), 'jane@example.com');
+    await user.type(screen.getByLabelText(/phone/i), phone);
+    await user.click(screen.getByRole('button', { name: /send enquiry/i }));
+
+    expect(screen.getByText(/enter a valid phone number/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/phone/i)).toHaveAttribute('aria-invalid', 'true');
+    expect(submitEnquiry).not.toHaveBeenCalled();
+  });
+
+  it('accepts a real Australian mobile number', async () => {
+    const { submitEnquiry, user } = setup();
+
+    await user.type(screen.getByLabelText(/name/i), 'Jane');
+    await user.type(screen.getByLabelText(/email/i), 'jane@example.com');
+    await user.type(screen.getByLabelText(/phone/i), '0412 345 678');
+    await user.click(screen.getByRole('button', { name: /send enquiry/i }));
+
+    expect(submitEnquiry).toHaveBeenCalledWith(expect.objectContaining({ phone: '0412 345 678' }));
+  });
+
   it('shows server errors and keeps the form so the customer can retry', async () => {
     const { user } = setup(vi.fn().mockRejectedValue(new ApiError('Too many enquiries, please try again later.', 429)));
 

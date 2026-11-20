@@ -30,7 +30,7 @@ const validEnquiry = {
   productId: '1',
   name: 'Jane Citizen',
   email: 'jane@example.com',
-  phone: '+61 400 000 000',
+  phone: '0412 345 678',
   message: 'Is this in stock?',
 };
 
@@ -107,6 +107,30 @@ describe('HTTP API', () => {
       expect(res.body.details).toHaveProperty('email');
       expect(res.body.details).toHaveProperty('name');
       expect(ctx.email.sent).toHaveLength(0);
+    });
+
+    it.each(['12345', '0000000000', '1234567', '+1 555 0100', 'abc', '0412'])(
+      'rejects the made-up phone number %j without sending email',
+      async (phone) => {
+        const res = await request(ctx.app).post('/api/enquiries').send({ ...validEnquiry, phone }).expect(400);
+        expect(res.body.details.phone).toEqual([expect.stringMatching(/valid phone number/i)]);
+        expect(ctx.email.sent).toHaveLength(0);
+      },
+    );
+
+    it.each([
+      ['0412 345 678', '+61 412 345 678'],
+      ['(02) 9876 5432', '+61 2 9876 5432'],
+      ['+91 98765 43210', '+91 98765 43210'],
+    ])('accepts the real phone number %j and emails it as %j', async (phone, formatted) => {
+      await request(ctx.app).post('/api/enquiries').send({ ...validEnquiry, phone }).expect(202);
+      expect(ctx.email.sent[0]?.text).toContain(`Phone: ${formatted}`);
+    });
+
+    it('accepts an enquiry with no phone number (phone is optional)', async () => {
+      const { phone: _omit, ...withoutPhone } = validEnquiry;
+      await request(ctx.app).post('/api/enquiries').send({ ...withoutPhone, phone: '' }).expect(202);
+      expect(ctx.email.sent[0]?.text).toContain('Phone: (not provided)');
     });
 
     it('404s for an unknown product without sending email', async () => {

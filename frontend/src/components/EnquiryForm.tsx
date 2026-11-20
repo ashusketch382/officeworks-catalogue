@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { ApiError, api as defaultApi, type Api } from '../api/client';
 import type { EnquiryRequest, FieldErrors } from '../api/types';
+import { isValidPhone, PHONE_ERROR } from './phone';
 
 type Fields = Required<Omit<EnquiryRequest, 'productId'>>;
 
@@ -11,7 +12,7 @@ export function validate(fields: Fields): FieldErrors {
   const errors: FieldErrors = {};
   if (!fields.name.trim()) errors.name = ['Name is required'];
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fields.email.trim())) errors.email = ['Enter a valid email address'];
-  if (fields.phone.trim() && !/^[+\d][\d\s()-]*$/.test(fields.phone.trim())) errors.phone = ['Enter a valid phone number'];
+  if (fields.phone.trim() && !isValidPhone(fields.phone.trim())) errors.phone = [PHONE_ERROR];
   return errors;
 }
 
@@ -105,6 +106,8 @@ export function EnquiryForm({
         Phone
         <input
           type="tel"
+          inputMode="tel"
+          placeholder="0412 345 678"
           value={fields.phone}
           onChange={set('phone')}
           autoComplete="tel"

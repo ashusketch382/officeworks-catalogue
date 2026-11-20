@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import type { CatalogueService } from '../catalogue/catalogueService.js';
 import type { EmailProvider } from './emailProvider.js';
+import { formatPhoneInternational, isValidPhone, PHONE_ERROR } from './phone.js';
 
 /**
  * Enquiry input. Validated on the server regardless of client-side checks.
@@ -14,9 +15,8 @@ export const enquirySchema = z.object({
     .string()
     .trim()
     .max(30)
-    .regex(/^[+\d][\d\s()-]*$/, 'Enter a valid phone number')
-    .optional()
-    .or(z.literal('')),
+    .refine((v) => v === '' || isValidPhone(v), PHONE_ERROR)
+    .optional(),
   message: z.string().trim().max(2000).optional().or(z.literal('')),
   website: z.string().optional(),
 });
@@ -67,7 +67,7 @@ export class EnquiryService {
         '',
         `Name: ${name}`,
         `Email: ${singleLine(input.email)}`,
-        `Phone: ${input.phone ? singleLine(input.phone) : '(not provided)'}`,
+        `Phone: ${input.phone ? formatPhoneInternational(input.phone) : '(not provided)'}`,
         '',
         'Message:',
         input.message || '(none)',

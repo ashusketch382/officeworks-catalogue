@@ -26,6 +26,7 @@
 4. **Category "top rated"** has no "I have chosen" in the AC, so it's computed by rating with an explicit tie-break (two electronics products tie at 4.8). Recorded in DECISIONS.md.
 
 ## Where the AI got things wrong, and how it was caught
+- **Phone validation was too weak, caught by me in manual testing.** The AI's first version only checked the *characters* (`^[+\d][\d\s()-]*$`), so made-up numbers like `12345` or `0000000000` were accepted. I asked for real validation. It now uses `libphonenumber-js` against actual numbering plans (Australian by default, `+` for international) on both client and server, with tests for the fake numbers I tried and for real AU and international numbers. A "plausible but incorrect" output: the field *looked* validated.
 - **Dockerfile vs npm workspaces lockfile.** The first Dockerfiles copied only one workspace's `package.json` before `npm ci`. With a shared root lockfile, npm can reject that as out of sync. Caught on review and fixed by copying both workspace manifests.
 - **Unsafe cleanup command.** During the smoke test the agent tried to stop the server by killing *all* `node.exe` processes on the machine. The permission guard blocked it. It was redone as a background task stopped by its own ID.
 - **False alarm on "missing" images.** The first browser screenshot showed blank product tiles. Rather than "fixing" CSS or CSP, the agent checked `naturalWidth` on the images: they had loaded, and the screenshot was taken before they painted. No code change. Good example of verifying before changing.
