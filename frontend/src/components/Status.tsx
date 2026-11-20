@@ -1,21 +1,21 @@
+import type { UseQueryResult } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
-import type { AsyncState } from '../api/useAsync';
 
 /** Renders loading / error states consistently; children render on success. */
-export function Status<T>({ state, children }: { state: AsyncState<T>; children: (data: T) => ReactNode }) {
-  if (state.status === 'loading') {
+export function Status<T>({ query, children }: { query: UseQueryResult<T>; children: (data: T) => ReactNode }) {
+  if (query.isError) {
+    return (
+      <p className="error" role="alert">
+        {query.error.message}
+      </p>
+    );
+  }
+  if (query.isPending) {
     return (
       <p className="muted" role="status">
         Loading…
       </p>
     );
   }
-  if (state.status === 'error') {
-    return (
-      <p className="error" role="alert">
-        {state.error.message}
-      </p>
-    );
-  }
-  return <>{children(state.data)}</>;
+  return <>{children(query.data)}</>;
 }

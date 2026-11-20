@@ -40,7 +40,7 @@ The brief says the **data source, look and feel, and email provider will all cha
 
 - **In-memory cache (5 min TTL)** keeps the PoC fast and shields Fake Store from repeated calls, but each instance has its own copy. That's fine for one container; use Redis when scaling out.
 - **Express 4** rather than Fastify or Nest: the most familiar and least magic option for a PoC. The routing layer is thin, so moving later would be cheap.
-- **A hand-rolled `useAsync` hook** instead of TanStack Query: one fewer dependency for 4 GET calls. It handles out-of-order responses. I'd switch to TanStack Query once caching or retries matter.
+- **TanStack Query for client data fetching** (`frontend/src/api/queries.ts`). I started with a small hand-rolled `useAsync` hook, but in testing every API call went out twice in development: React `StrictMode` deliberately double-mounts, and the hook didn't de-duplicate. Nothing was cached either, so revisiting Home or a category refetched it. TanStack Query merges identical in-flight requests, caches for 5 minutes (matching the backend cache TTL), and lets list responses seed each product's detail cache, so opening a product from a list costs **zero** calls. StrictMode stays on because it catches real bugs. Two tests run the app in StrictMode and fail if any endpoint is called more than once across a full browsing journey.
 
 ## Next, with another day
 

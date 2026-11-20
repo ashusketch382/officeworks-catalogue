@@ -87,7 +87,7 @@ backend/src/
   config/         env parsing and validation
   container.ts    composition root: the one place adapters are chosen
 frontend/src/
-  api/            the only code that talks HTTP
+  api/            client.ts (the only code that talks HTTP) + queries.ts (TanStack Query hooks: de-dupe + cache)
   components/     layout, tiles, enquiry form
   pages/          home, category, search, product
 ```

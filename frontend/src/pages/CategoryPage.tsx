@@ -1,15 +1,14 @@
 import { useParams } from 'react-router-dom';
-import { api } from '../api/client';
-import { useAsync } from '../api/useAsync';
+import { useCategory } from '../api/queries';
 import { ProductGrid } from '../components/ProductTile';
 import { Status } from '../components/Status';
 
 export function CategoryPage() {
   const { slug = '' } = useParams();
-  const state = useAsync(() => api.getCategory(slug), [slug]);
+  const query = useCategory(slug);
 
   return (
-    <Status state={state}>
+    <Status query={query}>
       {(view) => (
         <>
           <h1>{view.category.name}</h1>

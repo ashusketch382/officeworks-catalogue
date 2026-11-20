@@ -1,18 +1,17 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { api } from '../api/client';
-import { useAsync } from '../api/useAsync';
+import { useProduct } from '../api/queries';
 import { EnquiryForm } from '../components/EnquiryForm';
 import { formatPrice } from '../components/format';
 import { Status } from '../components/Status';
 
 export function ProductPage() {
   const { id = '' } = useParams();
-  const state = useAsync(() => api.getProduct(id), [id]);
+  const query = useProduct(id);
   const [enquiring, setEnquiring] = useState(false);
 
   return (
-    <Status state={state}>
+    <Status query={query}>
       {(product) => (
         <article className="product">
           <img src={product.imageUrl} alt={product.title} />

@@ -1,7 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { Link, NavLink, Outlet, useNavigate, useSearchParams } from 'react-router-dom';
-import { api } from '../api/client';
-import { useAsync } from '../api/useAsync';
+import { useCategories } from '../api/queries';
 
 function SearchBar() {
   const [params] = useSearchParams();
@@ -33,11 +32,11 @@ function SearchBar() {
 }
 
 function CategoryNav() {
-  const state = useAsync(() => api.getCategories(), []);
-  if (state.status !== 'success') return null;
+  const { data: categories } = useCategories();
+  if (!categories) return null;
   return (
     <nav aria-label="Categories" className="categories">
-      {state.data.map((c) => (
+      {categories.map((c) => (
         <NavLink key={c.slug} to={`/categories/${c.slug}`}>
           {c.name}
         </NavLink>

@@ -11,7 +11,7 @@ Product catalogue PoC: React + TypeScript client (`frontend/`), Node.js + TypeSc
 - Upstream shapes are mapped to our domain types in the adapter (`fakeStoreSource.ts`) and validated with zod. Don't leak upstream field names (e.g. `rate`, `image`) past the adapter.
 - Concrete adapters are chosen only in `backend/src/container.ts`.
 - All config comes from env vars validated in `backend/src/config/config.ts`. Never hard-code secrets. Update `.env.example` when adding config.
-- The frontend talks HTTP only from `frontend/src/api/client.ts`.
+- The frontend talks HTTP only from `frontend/src/api/client.ts`. Pages fetch data only through the TanStack Query hooks in `frontend/src/api/queries.ts`, never with `useEffect` + `fetch`. That avoids duplicate requests under StrictMode and gives caching.
 
 ## Coding standards
 - TypeScript strict mode, no `any`. ESM with `.js` import suffixes in the backend.
